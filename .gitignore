@@ -1,0 +1,19 @@
+# Build artifacts
+build/
+dist/
+*.spec
+
+# Python
+__pycache__/
+*.pyc
+
+# Temp files
+*.tmp_ocr.png
+*.tmp.png
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Don't commit PDFs (your contracts are private)
+*.pdf

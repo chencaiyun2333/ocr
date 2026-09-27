@@ -1,0 +1,52 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install PyMuPDF rapidocr-onnxruntime Pillow pyinstaller
+
+      - name: Get rapidocr path
+        id: rapid_path
+        shell: pwsh
+        run: |
+          $p = python -c "import rapidocr_onnxruntime as r; import os; print(os.path.dirname(r.__file__))"
+          echo "RAPID_PATH=$p" >> $env:GITHUB_OUTPUT
+          echo "rapidocr path: $p"
+
+      - name: Build EXE with PyInstaller
+        run: |
+          pyinstaller ^
+            --noconfirm ^
+            --onedir ^
+            --windowed ^
+            --name "PDF合同重命名工具" ^
+            --add-data "${{ steps.rapid_path.outputs.RAPID_PATH }};rapidocr_onnxruntime" ^
+            --collect-all rapidocr_onnxruntime ^
+            --collect-all onnxruntime ^
+            --hidden-import PIL ^
+            --hidden-import PIL._tkinter_finder ^
+            pdf_contract_renamer.py
+        shell: cmd
+
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PDF合同重命名工具-Windows
+          path: dist/PDF合同重命名工具/
+          retention-days: 90
